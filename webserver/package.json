@@ -1,0 +1,19 @@
+{
+  "name": "webserver",
+  "version": "1.0.0",
+  "main": "./dist/index.mjs",
+  "scripts": {
+    "build": "npx tsc",
+    "start": "node ./dist/index.mjs"
+  },
+  "author": "",
+  "license": "MIT",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^22.2.0",
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "mime": "^4.0.4"
+  }
+}
