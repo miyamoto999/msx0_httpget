@@ -8,13 +8,18 @@ MSX0の新ファーム(ver.0.11.08)+MSX-DOS2用になっています。
 
 - MSX0 Stack ver.0.11.08
     - MSX-DOS2 Version 2.20
+    - MSX-DOS Version 1.03
 
 ### ビルド環境
 - macOS Sonoma 14.6.1
-- z88dk Nightly Build(v22793-e0f20fa179-20240813)
+- z88dk Nightly Build(v22803-1d37583450-20240821)
 
 ## ビルド方法
-Xcode、z88dkをインストールしているmacOSでmakeで生成されます。
+Xcode、z88dkをインストールしているmacOS(UNIX風の環境ならmacOSでなくてもできると思います)で生成します。
+
+MSX-DOS2版は make で生成。
+
+MSX-DOS1版は make -f Makefile.dos1 で生成。(DOS1版はhttpget1.comが生成されます。)
 
 ## 使用方法
 
@@ -40,11 +45,21 @@ Usage : httpget HOSTNAME PORT SRCPATH DESTNAME
 
 となり、次のように使用します。
 
+※ MSX-DOS1版のコマンドはhttpget1.comになります。
+
 ~~~
-httpget 192.168.0.2 80 /httpget.com httget.com
+httpget 192.168.0.2 80 /test.txt test.txt
 ~~~
 
-これで http://192.168.0.2:80/httpget.com をダウンロードしてhttpget.comと言うファイルで保存することになります。
+これで http://192.168.0.2:80/test.txt をダウンロードしてtest.txtと言うファイルで保存することになります。
 
 
+## 更新履歴
+- 2024/8/22 Version 1.1
 
+    Ctrl-Cで停止できなかったのをできるようにした。
+    
+    DOS1版のバイナリ(httpget1.com)を用意した。※注 DOS1版で取得したファイルは128バイト単位になってしまいます。
+
+- 2024/8/17 Version 1.0
+    最初のバージョン

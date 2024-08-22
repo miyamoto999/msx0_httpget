@@ -1,10 +1,10 @@
-TARGET=httpget.com
+TARGET=httpget1.com
 LD=z88dk-z80asm
 AS=z88dk-z80asm
 CC=zcc
-OBJS=httpget.o iot.o iotread.o dos1_const.o dos2_defab.o
+OBJS=httpget.o iot.o iotread.o dos1_dirio.o
 CFLAGS_INC=
-CFLAGS=+msx -subtype=msxdos2
+CFLAGS=+msx -subtype=msxdos
 ASCONFIGS=$(CFLAGS_INC)
 
 all:$(TARGET)
@@ -26,7 +26,6 @@ clean:
 depend:
 	gcc $(CFLAGS_INC) -E -MM -w *.c > depends
 
-dos1_const.o:dos1_const.asm msxdos.inc
-dos2_defab.o:dos2_defab.asm msxdos.inc
+dos1_dirio.o:dos1_dirio.asm msxdos.inc
 
 -include depends

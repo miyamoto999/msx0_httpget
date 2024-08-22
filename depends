@@ -1,3 +1,3 @@
-httpget.o: httpget.c bool.h iot.h
+httpget.o: httpget.c bool.h iot.h msxdos.h
 iot.o: iot.c iot.h bool.h
 iotread.o: iotread.c bool.h iot.h

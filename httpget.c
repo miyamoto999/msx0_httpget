@@ -6,6 +6,9 @@
 #include <errno.h>
 #include "bool.h"
 #include "iot.h"
+#include "msxdos.h"
+
+#define VERSION     "1.1"
 
 #define DATA_COUNT  3
 #define NET_IF      "msx/me/if/NET0/"
@@ -24,8 +27,14 @@
 #define MSXWORK_JIFFY   ((volatile uint16_t *)0xfc9e)
 #define GET_JIFFY()     *MSXWORK_JIFFY
 
-long heap = 0x8000;
+#define MSXWORK_CSRSW   ((uint8_t *)0xfca9)
+
+long heap;
 static char *buf;
+
+BOOL abort_flag = FALSE;
+BOOL write_err_flag = FALSE;
+BOOL net_err_flag = FALSE;
 
 void net_connect(const char *hostname, int port)
 {
@@ -103,6 +112,16 @@ void disp_progreass(BOOL chunked, const char *filename, long data_size, long tot
     }
 }
 
+#ifdef __MSXDOS_MSXDOS2
+BOOL abort_routine(uint8_t err1, uint8_t err2)
+{
+    if(err1 == ERR_CTRLC || err1 == ERR_STOP) {
+        abort_flag = TRUE;
+        return TRUE;
+    }
+    return FALSE;
+}
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -111,9 +130,13 @@ int main(int argc, char *argv[])
     BOOL chunked = FALSE;
 
     mallinit();
-    sbrk(0x8000, 16 * 1024); 
+    sbrk(0x8000, 16 * 1024);
 
-    printf("HTTPGET Version 1.0\n");
+#ifdef __MSXDOS_MSXDOS1
+    int cmd_len = *((uint8_t *)0x0080);
+    *((uint8_t *)0x0081 + cmd_len) = 0;
+#endif
+    printf("HTTPGET Version %s\n", VERSION);
     if(argc != 5) {
         fprintf(stderr, "Usage : httpget HOSTNAME PORT SRCPATH DESTNAME\n");
         return 1;
@@ -130,6 +153,10 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Memory allocation error\n");
         return 1;
     }
+
+#ifdef __MSXDOS_MSXDOS2
+    dos2_defab(abort_routine);
+#endif
 
     const char *hostname = argv[1];
     const int port = atoi(argv[2]);
@@ -204,6 +231,9 @@ int main(int argc, char *argv[])
         download_size = 1;
     }
     uint16_t prev_jiffy = 0;
+#ifdef __MSXDOS_MSXDOS1
+    *MSXWORK_CSRSW = 0;
+#endif
     while(data_size < download_size) {
         int read_size = BUF_SIZE;
         long chunk_size = BUF_SIZE;
@@ -227,15 +257,13 @@ int main(int argc, char *argv[])
             len = iot_read(NET_MSG, buf, read_size);
             if(len != 0) {
                 size_t ret = fwrite(buf, 1, len, fp);
-                if(ret < len && errno != 0) {
-                    fprintf(stderr, "\nFile Write ERROR\n");
-                    fclose(fp);
-                    return 1;
+                if(ret == 0) {
+                    write_err_flag = TRUE;
+                    break;
                 }
             } else if(len == 0 && !net_is_connected()) {
-                fprintf(stderr, "Network ERROR???\n");
-                fclose(fp);
-                return 1;
+                net_err_flag = TRUE;
+                break;
             }
             data_size += len;
             if((GET_JIFFY() - prev_jiffy) >= 30) {
@@ -248,17 +276,42 @@ int main(int argc, char *argv[])
             } else {
                 break;
             }
+#ifdef __MSXDOS_MSXDOS1
+            if(dos1_dirio(0xff) == 0x03) {
+                abort_flag = TRUE;
+            }
+#elif defined(__MSXDOS_MSXDOS2)
+            dos1_const();
+#endif
+            if(abort_flag) {
+                net_discconect();
+                break;
+            }
+        }
+        if(abort_flag || write_err_flag || net_err_flag) {
+            break;
         }
         if(chunked) {
             iot_readline(NET_MSG, NET_CONNECT);
         }
     }
     disp_progreass(chunked, destname, data_size, download_size);
-    fprintf(stderr, "\n");
+#ifdef __MSXDOS_MSXDOS1
+    *MSXWORK_CSRSW = 1;
+#endif
+    printf("\n");
     if(fclose(fp) == EOF) {
         fprintf(stderr, "File Write ERROR\n");
     } else {
-        printf("Commplited.\n");
+        if(net_err_flag) {
+            fprintf(stderr, "Network ERROR???\n");
+        } else if(write_err_flag) {
+            fprintf(stderr, "Write Error\n");
+        } else if(abort_flag) {
+            printf("Abort.\n");
+        } else {
+            printf("Commplited.\n");
+        }
     }
 
     return 0;
