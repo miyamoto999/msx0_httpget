@@ -8,7 +8,7 @@
 #include "iot.h"
 #include "msxdos.h"
 
-#define VERSION     "1.1"
+#define VERSION     "1.1.1"
 
 #define DATA_COUNT  3
 #define NET_IF      "msx/me/if/NET0/"
@@ -173,6 +173,8 @@ int main(int argc, char *argv[])
             return 1;
         }
     }
+
+    time_t start_time = time(NULL);
     printf("CONNECTED\n");
     sprintf(buf, "GET %s HTTP/1.1\x0d\x0a", src_path);
     iot_puts(NET_MSG, buf);
@@ -299,6 +301,7 @@ int main(int argc, char *argv[])
 #ifdef __MSXDOS_MSXDOS1
     *MSXWORK_CSRSW = 1;
 #endif
+    long elapsed_time = time(NULL) - start_time;
     printf("\n");
     if(fclose(fp) == EOF) {
         fprintf(stderr, "File Write ERROR\n");
@@ -310,7 +313,9 @@ int main(int argc, char *argv[])
         } else if(abort_flag) {
             printf("Abort.\n");
         } else {
-            printf("Commplited.\n");
+            int sec = elapsed_time % 60;
+            int min = elapsed_time / 60;
+            printf("Commplited.(%02d:%02d)\n", min, sec);
         }
     }
 
