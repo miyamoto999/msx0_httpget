@@ -6,5 +6,9 @@ _FCLOSE:    equ     0x10
 _FMAKE:     equ     0x16
 _SETDTA:    equ     0x1a
 _WRBLK:     equ     0x26
+_CREATE:    equ     0x44
+_CLOSE:     equ     0x45
+_WRITE:     equ     0x49
 _DEFAB:     equ     0x63
 _DEFER:     equ     0x64
+_DOSVER:    equ     0x6f

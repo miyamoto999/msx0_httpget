@@ -14,6 +14,4 @@ _dos1_dirio:
     ld e,(hl)
 
     ld c,_DIRIO
-    call BDOS
-
-    ret
+    jp BDOS

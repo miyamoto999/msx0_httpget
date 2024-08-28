@@ -9,6 +9,4 @@
 ; uint8_t dos1_const();
 _dos1_const:
     ld c,_CONST
-    call BDOS
-
-    ret
+    jp BDOS

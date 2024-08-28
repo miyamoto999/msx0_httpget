@@ -26,9 +26,7 @@ _dos2_defab:
     ld de,abort_routine
 cancel:
     ld c,_DEFAB
-    call BDOS
-
-    ret
+    jp BDOS
 ;;
 
 abort_routine:

@@ -4,7 +4,8 @@
 #include "bool.h"
 
 //#define IOT_PORT    8
-#define IOT_PORT    0x58
+#define IOT_PORT1    0x58
+#define IOT_PORT2    0x57
 
 BOOL iot_init();
 void iot_puts(const char *node, const char *val);

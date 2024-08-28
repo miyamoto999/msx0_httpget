@@ -1,3 +1,6 @@
-httpget.o: httpget.c bool.h iot.h msxdos.h
+bfile_dos1.o: bfile_dos1.c msxdos.h bool.h buf_file.h
+bfile_dos2.o: bfile_dos2.c msxdos.h bool.h buf_file.h
+httpget.o: httpget.c bool.h iot.h msxdos.h buf_file.h
 iot.o: iot.c iot.h bool.h
 iotread.o: iotread.c bool.h iot.h
+msx_fcb_init.o: msx_fcb_init.c bool.h buf_file.h msxdos.h

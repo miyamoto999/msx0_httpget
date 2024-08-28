@@ -2,7 +2,7 @@ TARGET=httpget.com
 LD=z88dk-z80asm
 AS=z88dk-z80asm
 CC=zcc
-OBJS=httpget.o iot.o iotread.o dos1_const.o dos2_defab.o
+OBJS=httpget.o iot.o iotread.o dos1_const.o dos2_defab.o bfile_dos2.o dos2_create.o dos2_write.o dos2_close.o
 CFLAGS_INC=
 CFLAGS=+msx -subtype=msxdos2
 ASCONFIGS=$(CFLAGS_INC)
@@ -28,5 +28,8 @@ depend:
 
 dos1_const.o:dos1_const.asm msxdos.inc
 dos2_defab.o:dos2_defab.asm msxdos.inc
+dos2_create.o:dos2_create.asm msxdos.inc
+dos2_write.o:dos2_write.asm msxdos.inc
+dos2_close.o:dos2_close.asm msxdos.inc
 
 -include depends

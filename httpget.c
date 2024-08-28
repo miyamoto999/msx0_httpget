@@ -7,8 +7,9 @@
 #include "bool.h"
 #include "iot.h"
 #include "msxdos.h"
+#include "buf_file.h"
 
-#define VERSION     "1.1.1"
+#define VERSION     "1.2"
 
 #define DATA_COUNT  3
 #define NET_IF      "msx/me/if/NET0/"
@@ -28,6 +29,8 @@
 #define GET_JIFFY()     *MSXWORK_JIFFY
 
 #define MSXWORK_CSRSW   ((uint8_t *)0xfca9)
+
+#define FILE_BUF_SIZE   2048
 
 long heap;
 static char *buf;
@@ -136,7 +139,12 @@ int main(int argc, char *argv[])
     int cmd_len = *((uint8_t *)0x0080);
     *((uint8_t *)0x0081 + cmd_len) = 0;
 #endif
+
+#ifdef __MSXDOS_MSXDOS1
+    printf("HTTPGET1 Version %s(DOS1 Version)\n", VERSION);
+#else
     printf("HTTPGET Version %s\n", VERSION);
+#endif
     if(argc != 5) {
         fprintf(stderr, "Usage : httpget HOSTNAME PORT SRCPATH DESTNAME\n");
         return 1;
@@ -222,8 +230,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    FILE *fp = fopen(destname, "wb");
-    if(!fp) {
+    BFILE *bfp = bfile_create(destname, FILE_BUF_SIZE);
+    if(!bfp) {
         fprintf(stderr, "Write file create ERROR\n");
         return 1;
     }
@@ -258,8 +266,8 @@ int main(int argc, char *argv[])
             }
             len = iot_read(NET_MSG, buf, read_size);
             if(len != 0) {
-                size_t ret = fwrite(buf, 1, len, fp);
-                if(ret == 0) {
+                uint16_t ret = bfile_write(bfp, buf, len);
+                if(ret <= 0) {
                     write_err_flag = TRUE;
                     break;
                 }
@@ -303,7 +311,8 @@ int main(int argc, char *argv[])
 #endif
     long elapsed_time = time(NULL) - start_time;
     printf("\n");
-    if(fclose(fp) == EOF) {
+    int ret = bfile_close(bfp);
+    if(ret != 0) {
         fprintf(stderr, "File Write ERROR\n");
     } else {
         if(net_err_flag) {
