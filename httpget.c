@@ -9,7 +9,7 @@
 #include "msxdos.h"
 #include "buf_file.h"
 
-#define VERSION     "1.2"
+#define VERSION     "1.3 pre"
 
 #define DATA_COUNT  3
 #define NET_IF      "msx/me/if/NET0/"

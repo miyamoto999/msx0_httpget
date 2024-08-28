@@ -142,8 +142,7 @@ int iot_read(const char *node, char *buf, int size)
         outp(IOT_PORT1, 3);
         outp(IOT_PORT1, 0x80);
 
-        int len = inp(IOT_PORT1);    // sizeの方が小さいと読み捨ててしまうことになる。こまった(^^;)
-                                    // 試してみたかんじ、64バイト以上にはならないようだ。
+        int len = inp(IOT_PORT1);       // 試してみたかんじ、64バイト以上にはならないようだ。
         for(int i = 0; i < len; i++) {
             if(i >= size) {
                 rbuf_add_data(inp(IOT_PORT1));
