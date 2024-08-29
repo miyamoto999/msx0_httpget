@@ -2,6 +2,7 @@
 #define __IOT_H__
 
 #include "bool.h"
+#include "rbuf.h"
 
 //#define IOT_PORT    8
 #define IOT_PORT1    0x58
@@ -14,9 +15,7 @@ short iot_geti(const char *node);
 // char *iot_gets(const char *node);
 void iot_node_write(const char *node);
 
-int iot_read(const char *node, char *buf, int size);
-char *iot_readline(const char *node, const char *node_connect);
-
-int rbuf_read(char *buf, int size);
+int iot_read(RBUF *rbuf, const char *node, char *buf, int size);
+char *iot_readline(RBUF *rbuf, const char *node, const char *node_connect);
 
 #endif

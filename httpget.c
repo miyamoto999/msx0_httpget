@@ -8,15 +8,12 @@
 #include "iot.h"
 #include "msxdos.h"
 #include "buf_file.h"
+#include "net.h"
+#include "rbuf.h"
 
 #define VERSION     "1.3 pre"
 
 #define DATA_COUNT  3
-#define NET_IF      "msx/me/if/NET0/"
-#define NET_ADDR    "msx/me/if/NET0/conf/addr"
-#define NET_PORT    "msx/me/if/NET0/conf/port"
-#define NET_CONNECT "msx/me/if/NET0/connect"
-#define NET_MSG     "msx/me/if/NET0/msg"
 
 #define HEADER_CONTENT_LENGTH   "Content-Length"
 #define HEADER_TRANSFER_ENCODING    "Transfer-Encoding"
@@ -31,6 +28,7 @@
 #define MSXWORK_CSRSW   ((uint8_t *)0xfca9)
 
 #define FILE_BUF_SIZE   2048
+#define RING_BUF_SIZE   1024
 
 long heap;
 static char *buf;
@@ -38,23 +36,6 @@ static char *buf;
 BOOL abort_flag = FALSE;
 BOOL write_err_flag = FALSE;
 BOOL net_err_flag = FALSE;
-
-void net_connect(const char *hostname, int port)
-{
-    iot_puts(NET_ADDR, hostname);
-    iot_puti(NET_PORT, port);
-    iot_puti(NET_CONNECT, 1);
-}
-
-BOOL net_is_connected()
-{
-    return iot_geti(NET_CONNECT);
-}
-
-void net_discconect()
-{
-    iot_puti(NET_CONNECT, 0);
-}
 
 static void spliit_http_status(char *status, char *datas[])
 {
@@ -131,6 +112,7 @@ int main(int argc, char *argv[])
     char *datas[DATA_COUNT];
     long download_size = 0;
     BOOL chunked = FALSE;
+    RBUF rbuf;
 
     mallinit();
     sbrk(0x8000, 16 * 1024);
@@ -162,6 +144,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    if(!rbuf_init(&rbuf, RING_BUF_SIZE)) {
+        free(buf);
+        fprintf(stderr, "Memory allocation error\n");
+        return 1;
+    }
+
 #ifdef __MSXDOS_MSXDOS2
     dos2_defab(abort_routine);
 #endif
@@ -172,26 +160,21 @@ int main(int argc, char *argv[])
     const char *destname = argv[4];
 
     printf("CONNECT %s:%d\n", hostname, port);
-    time_t st = time(NULL);
-    net_connect(hostname, port);
-
-    while(!net_is_connected()) {
-        if(time(NULL) - st >= TIME_OUT) {
-            fprintf(stderr, "CONNECT TIMEOUT\n");
-            return 1;
-        }
+    if(!net_connect(hostname, port, TIME_OUT)) {
+        fprintf(stderr, "CONNECT TIMEOUT\n");
+        return 1;
     }
 
     time_t start_time = time(NULL);
     printf("CONNECTED\n");
     sprintf(buf, "GET %s HTTP/1.1\x0d\x0a", src_path);
-    iot_puts(NET_MSG, buf);
+    net_write_str(buf);
     sprintf(buf, "HOST: %s:%d\x0d\x0a", hostname, port);
-    iot_puts(NET_MSG, buf);
-    iot_puts(NET_MSG, "CONNECTION: close\x0d\x0a");
-    iot_puts(NET_MSG, "\x0d\x0a");
+    net_write_str(buf);
+    net_write_str("CONNECTION: close\x0d\x0a");
+    net_write_str("\x0d\x0a");
 
-    char *data = iot_readline(NET_MSG, NET_CONNECT);
+    char *data = iot_readline(&rbuf, NET_MSG, NET_CONNECT);
     if(strncmp(data, "HTTP", 4) != 0) {
         fprintf(stderr, "Not Recv HTTP Status\n");
         net_discconect();
@@ -204,7 +187,8 @@ int main(int argc, char *argv[])
         return 1;
     }
     while(1) {
-        char *data = iot_readline(NET_MSG, NET_CONNECT);
+        BOOL is_connedted = net_is_connected();
+        char *data = iot_readline(&rbuf, NET_MSG, NET_CONNECT);
         int len = strlen(data);
         if(len == 0) {
             break;
@@ -220,7 +204,7 @@ int main(int argc, char *argv[])
                 return 1;
             }
         }
-        if(!net_is_connected() && strlen(data) == 0) {
+        if(!is_connedted && strlen(data) == 0) {
             fprintf(stderr, "Network ERROR???\n");
             return 1;
         }
@@ -248,12 +232,12 @@ int main(int argc, char *argv[])
         int read_size = BUF_SIZE;
         long chunk_size = BUF_SIZE;
         if(chunked) {
-            char *str = iot_readline(NET_MSG, NET_CONNECT);
+            char *str = iot_readline(&rbuf, NET_MSG, NET_CONNECT);
             chunk_size = strtol(str, NULL, 16);
             // printf("str = %s\n", str);
             // printf("chunk_size = %ld\n", chunk_size);
             if(chunk_size == 0) {
-                iot_readline(NET_MSG, NET_CONNECT);
+                iot_readline(&rbuf, NET_MSG, NET_CONNECT);
                 break;
             }
         }
@@ -264,14 +248,15 @@ int main(int argc, char *argv[])
             } else {
                 read_size = BUF_SIZE;
             }
-            len = iot_read(NET_MSG, buf, read_size);
+            BOOL is_connected = net_is_connected();
+            len = iot_read(&rbuf, NET_MSG, buf, read_size);
             if(len != 0) {
                 uint16_t ret = bfile_write(bfp, buf, len);
                 if(ret <= 0) {
                     write_err_flag = TRUE;
                     break;
                 }
-            } else if(len == 0 && !net_is_connected()) {
+            } else if(len == 0 && !is_connected) {
                 net_err_flag = TRUE;
                 break;
             }
@@ -302,16 +287,16 @@ int main(int argc, char *argv[])
             break;
         }
         if(chunked) {
-            iot_readline(NET_MSG, NET_CONNECT);
+            iot_readline(&rbuf, NET_MSG, NET_CONNECT);
         }
     }
     disp_progreass(chunked, destname, data_size, download_size);
 #ifdef __MSXDOS_MSXDOS1
     *MSXWORK_CSRSW = 1;
 #endif
-    long elapsed_time = time(NULL) - start_time;
     printf("\n");
     int ret = bfile_close(bfp);
+    long elapsed_time = time(NULL) - start_time;
     if(ret != 0) {
         fprintf(stderr, "File Write ERROR\n");
     } else {

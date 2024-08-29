@@ -3,7 +3,7 @@ LD=z88dk-z80asm
 AS=z88dk-z80asm
 CC=zcc
 OBJS=httpget.o iot.o iotread.o dos1_const.o dos2_defab.o bfile_dos2.o dos2_create.o dos2_write.o dos2_close.o \
-	iot_node_write.o
+	iot_node_write.o net.o rbuf.o
 CFLAGS_INC=
 CFLAGS=+msx -subtype=msxdos2
 ASCONFIGS=$(CFLAGS_INC)
