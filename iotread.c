@@ -64,32 +64,25 @@ char *iot_readline(RBUF *rbuf, const char *node, const char *node_connect)
     return retbuf;
 }
 
+int iot_read_2(RBUF *rbuf, const char *node, char *buf, int size)
+{
+    int ret = 0;
+
+    for(int i = 0; i < size && rbuf_get_size(rbuf) != 0; i++) {
+        buf[i] = rbuf_get_data(rbuf);
+        ret++;
+    }
+    return ret;
+}
+
 int iot_read(RBUF *rbuf, const char *node, char *buf, int size)
 {
     int ret = 0;
 
     if(rbuf_get_size(rbuf) == 0) {
-        iot_node_write(node);
-
-        outp(IOT_PORT1, 0xe0);
-        outp(IOT_PORT1, 1);
-        outp(IOT_PORT1, 3);
-        outp(IOT_PORT1, 0x80);
-
-        int len = inp(IOT_PORT1);       // 試してみたかんじ、64バイト以上にはならないようだ。
-        for(int i = 0; i < len; i++) {
-            if(i >= size) {
-                rbuf_add_data(rbuf, inp(IOT_PORT1));
-            } else {
-                buf[i] = inp(IOT_PORT1);
-                ret++;
-            }
-        }
+        ret = iot_read_1(rbuf, node, buf, size);
     } else {
-        for(int i = 0; i < size && rbuf_get_size(rbuf) != 0; i++) {
-            buf[i] = rbuf_get_data(rbuf);
-            ret++;
-        }
+        ret = iot_read_2(rbuf, node, buf, size);
     }
 
     return ret;

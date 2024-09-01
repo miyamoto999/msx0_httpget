@@ -2,8 +2,9 @@ TARGET=httpget1.com
 LD=z88dk-z80asm
 AS=z88dk-z80asm
 CC=zcc
-OBJS=httpget.o iot.o iotread.o dos1_dirio.o bfile_dos1.o msx_fcb_init.o dos1_fmake.o dos1_wrblk.o dos1_fclose.o \
-		dos1_setdta.o iot_node_write.o net.o rbuf.o
+OBJS=httpget.o iotread.o dos1_dirio.o bfile_dos1.o msx_fcb_init.o dos1_fmake.o dos1_wrblk.o dos1_fclose.o \
+		dos1_setdta.o iot_node_write.o net.o rbuf.o iot_puts.o iot_puti.o iot_geti.o rbuf_get_size.o rbuf_add_data.o \
+		iot_read_1.o
 CFLAGS_INC=
 CFLAGS=+msx -subtype=msxdos
 ASCONFIGS=$(CFLAGS_INC)
@@ -34,5 +35,12 @@ dos1_fclose.o:dos1_fclose.asm msxdos.inc
 dos1_setdta.o:dos1_setdta.asm msxdos.inc
 
 iot_node_write.o:iot_node_write.asm iot.inc
+iot_puts.o:iot_puts.asm iot.inc
+iot_puti.o:iot_puti.asm iot.inc
+iot_geti.o:iot_geti.asm iot.inc
+iot_read_1.o:iot_read_1.asm iot.inc
+
+rbuf_get_size.o:rbuf_get_size.asm rbuf.inc
+rbuf_add_data.o:rbuf_add_data.asm rbuf.inc
 
 -include depends

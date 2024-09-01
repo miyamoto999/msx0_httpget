@@ -18,4 +18,6 @@ void iot_node_write(const char *node);
 int iot_read(RBUF *rbuf, const char *node, char *buf, int size);
 char *iot_readline(RBUF *rbuf, const char *node, const char *node_connect);
 
+int iot_read_1(RBUF *rbuf, const char *node, char *buf, int size);
+
 #endif

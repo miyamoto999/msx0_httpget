@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
     char *datas[DATA_COUNT];
     long download_size = 0;
     BOOL chunked = FALSE;
-    RBUF rbuf;
+    RBUF *rbuf;
 
     mallinit();
     sbrk(0x8000, 16 * 1024);
@@ -144,7 +144,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if(!rbuf_init(&rbuf, RING_BUF_SIZE)) {
+    rbuf = rbuf_create(RING_BUF_SIZE);
+    if(!rbuf) {
         free(buf);
         fprintf(stderr, "Memory allocation error\n");
         return 1;
@@ -174,7 +175,7 @@ int main(int argc, char *argv[])
     net_write_str("CONNECTION: close\x0d\x0a");
     net_write_str("\x0d\x0a");
 
-    char *data = iot_readline(&rbuf, NET_MSG, NET_CONNECT);
+    char *data = iot_readline(rbuf, NET_MSG, NET_CONNECT);
     if(strncmp(data, "HTTP", 4) != 0) {
         fprintf(stderr, "Not Recv HTTP Status\n");
         net_discconect();
@@ -188,7 +189,7 @@ int main(int argc, char *argv[])
     }
     while(1) {
         BOOL is_connedted = net_is_connected();
-        char *data = iot_readline(&rbuf, NET_MSG, NET_CONNECT);
+        char *data = iot_readline(rbuf, NET_MSG, NET_CONNECT);
         int len = strlen(data);
         if(len == 0) {
             break;
@@ -232,24 +233,35 @@ int main(int argc, char *argv[])
         int read_size = BUF_SIZE;
         long chunk_size = BUF_SIZE;
         if(chunked) {
-            char *str = iot_readline(&rbuf, NET_MSG, NET_CONNECT);
+            char *str = iot_readline(rbuf, NET_MSG, NET_CONNECT);
             chunk_size = strtol(str, NULL, 16);
             // printf("str = %s\n", str);
             // printf("chunk_size = %ld\n", chunk_size);
             if(chunk_size == 0) {
-                iot_readline(&rbuf, NET_MSG, NET_CONNECT);
+                iot_readline(rbuf, NET_MSG, NET_CONNECT);
                 break;
             }
         }
         int len;
         while(chunk_size > 0) {
+#ifdef __MSXDOS_MSXDOS1
+            if(dos1_dirio(0xff) == 0x03) {
+                abort_flag = TRUE;
+            }
+#elif defined(__MSXDOS_MSXDOS2)
+            dos1_const();
+#endif
+            if(abort_flag) {
+                net_discconect();
+                break;
+            }
             if(chunk_size < BUF_SIZE) {
                 read_size = chunk_size;
             } else {
                 read_size = BUF_SIZE;
             }
             BOOL is_connected = net_is_connected();
-            len = iot_read(&rbuf, NET_MSG, buf, read_size);
+            len = iot_read(rbuf, NET_MSG, buf, read_size);
             if(len != 0) {
                 uint16_t ret = bfile_write(bfp, buf, len);
                 if(ret <= 0) {
@@ -271,23 +283,12 @@ int main(int argc, char *argv[])
             } else {
                 break;
             }
-#ifdef __MSXDOS_MSXDOS1
-            if(dos1_dirio(0xff) == 0x03) {
-                abort_flag = TRUE;
-            }
-#elif defined(__MSXDOS_MSXDOS2)
-            dos1_const();
-#endif
-            if(abort_flag) {
-                net_discconect();
-                break;
-            }
         }
         if(abort_flag || write_err_flag || net_err_flag) {
             break;
         }
         if(chunked) {
-            iot_readline(&rbuf, NET_MSG, NET_CONNECT);
+            iot_readline(rbuf, NET_MSG, NET_CONNECT);
         }
     }
     disp_progreass(chunked, destname, data_size, download_size);

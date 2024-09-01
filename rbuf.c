@@ -2,8 +2,14 @@
 #include <string.h>
 #include "rbuf.h"
 
-BOOL rbuf_init(RBUF *rbuf, int size)
+RBUF *rbuf_create(int size)
 {
+    RBUF *rbuf;
+
+    rbuf = malloc(sizeof(RBUF));
+    if(!rbuf) {
+        return NULL;
+    }
     // ちょうどいいサイズにする。
     int s = size - 1;
     s |= s >> 1;
@@ -16,29 +22,14 @@ BOOL rbuf_init(RBUF *rbuf, int size)
 
     rbuf->buf = malloc(s);
     if(!rbuf->buf) {
-        return FALSE;
+        free(rbuf);
+        return NULL;
     }
 
     rbuf->read_idx = 0;
     rbuf->write_idx = 0;
 
-    return TRUE;
-}
-
-int rbuf_get_size(const RBUF *rbuf)
-{
-    return (rbuf->write_idx - rbuf->read_idx) & rbuf->buf_mask;
-}
-
-BOOL rbuf_add_data(RBUF *rbuf, const char data)
-{
-    if(((rbuf->write_idx + 1) & rbuf->buf_mask) == rbuf->read_idx) {
-        return FALSE;
-    }
-    rbuf->buf[rbuf->write_idx] = data;
-    rbuf->write_idx = (rbuf->write_idx + 1) & rbuf->buf_mask;
-
-    return TRUE;
+    return rbuf;
 }
 
 int rbuf_get_data(RBUF *rbuf)
@@ -74,4 +65,13 @@ int rbuf_read(RBUF *rbuf, char *buf, int size)
         read_size++;
     }
     return read_size;
+}
+
+void rbuf_delete(RBUF *rbuf)
+{
+    if(rbuf->buf) {
+        free(rbuf->buf);
+        rbuf->buf = NULL;
+    }
+    free(rbuf);
 }
