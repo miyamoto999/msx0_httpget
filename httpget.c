@@ -11,7 +11,7 @@
 #include "net.h"
 #include "rbuf.h"
 
-#define VERSION     "1.3 pre"
+#define VERSION     "1.3"
 
 #define DATA_COUNT  3
 
