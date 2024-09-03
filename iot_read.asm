@@ -2,8 +2,8 @@
 
 
     SECTION code_user
-    PUBLIC iot_read_1, _iot_read_1
-    GLOBAL iot_node_write,rbuf_add_data
+    PUBLIC iot_read,_iot_read
+    GLOBAL iot_node_write,rbuf_add_data,rbuf_read, rbuf_get_size
 
 ; nodeからデータを取得
 ;   hl <- nodeの文字列の先頭アドレス
@@ -63,18 +63,19 @@ iot_read_1:
     ex hl,de
     push iy
     pop de
+
 loop1:
+    ld a,d
+    or e
+    jr z,loop2
+
     in a,(IOT_PORT1)
     ld (hl),a
     inc hl
     inc c
     dec de
-    ld a,d
-    or e
-    jr z,BUF_FULL
 
-    dec b
-    jr nz,loop1
+    djnz loop1
 READ_RET:
     ld h,0
     ld l,c
@@ -82,24 +83,54 @@ READ_RET:
 
 loop2:
     in a,(IOT_PORT1)
-    push de
     call rbuf_add_data
-    pop de
 
-BUF_FULL:
-    dec b
-    jr nz,loop2
+    djnz loop2
     ld h,0
     ld l,c
     ret
 
-; nodeからデータを取得(C言語IF)
-; int iot_read_1(RBUF *rbuf, const char *node, char *buf, int size);
-; sp+2 size
-; sp+4 buf
-; sp+6 node
-; sp+8 rbuf
-_iot_read_1:
+; リングバッファにデータがある場合はリングバッファから、ない場合はnodeからデータを取得
+;   hl <- nodeの文字列の先頭アドレス
+;   b <- nodeの文字列の文字数
+;   de <- データを保存するバッファの先頭アドレス
+;   iy <- データ書き込みバッファサイズ
+;   ix <- RBUF、リングバッファ
+;
+; 戻り値
+;   hl <- 書き込んだデータ数
+;
+; int iot_read(RBUF *rbuf, const char *node, char *buf, int size)
+; {
+;     int ret = 0;
+
+;     if(rbuf_get_size(rbuf) == 0) {
+;         ret = iot_read_1(rbuf, node, buf, size);
+;     } else {
+;         ret = rbuf_read(rbuf, buf, size);
+;     }
+
+;     return ret;
+; }
+
+iot_read:
+    push hl
+    push de
+    call rbuf_get_size
+    pop de
+    ld a,h
+    or l
+    pop hl
+    jp z,iot_read_1
+
+    ex hl,de
+    push iy
+    pop de
+    jp rbuf_read
+
+; リングバッファにデータがある場合はリングバッファから、ない場合はnodeからデータを取得(C言語IF)
+; int iot_read(RBUF *rbuf, const char *node, char *buf, int size);
+_iot_read:
     ld hl,2
     add hl,sp
 
@@ -138,13 +169,14 @@ _iot_read_1:
 
     push hl
     ld b,0
-loop3:
+loop4:
     ld a,(hl)
     inc b
     inc hl
     or a
-    jr nz,loop3
+    jr nz,loop4
     pop hl
     dec b
 
-    jp iot_read_1
+    jp iot_read
+

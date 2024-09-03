@@ -5,6 +5,8 @@
 
 long heap;
 
+char buf[2048];
+
 void test1()
 {
     RBUF *rbuf;
@@ -65,6 +67,61 @@ void test2()
     printf("OK\n");
 }
 
+void test3()
+{
+    RBUF *rbuf;
+    BOOL bret;
+    const int BUF_SIZE = 2048;
+
+    printf("test3:");
+    rbuf = rbuf_create(BUF_SIZE);
+    for(int i = 0; i < BUF_SIZE; i++) {
+        bret = rbuf_add_data(rbuf, (char)i);
+        if(i == BUF_SIZE - 1) {
+            assert(!bret);
+            int size = rbuf_get_size(rbuf);
+            assert(size == i);
+        } else {
+            assert(bret);
+            int size = rbuf_get_size(rbuf);
+            assert(size == i + 1);
+        }
+    }
+
+    for(int i = 0; i < BUF_SIZE / 2; i++) {
+        int data = rbuf_get_data(rbuf);
+        assert((char)i == (char)data);
+        int size = rbuf_get_size(rbuf);
+        assert(size == BUF_SIZE - 1 - 1 - i);
+    }
+    while(rbuf_get_data(rbuf) != -1);
+
+    for(int i = 0; i < BUF_SIZE-1; i++) {
+        bret = rbuf_add_data(rbuf, (char)i);
+        assert(bret);
+        int size = rbuf_get_size(rbuf);
+        assert(size == i+1);
+    }
+    int size = rbuf_read(rbuf, buf, 1024);
+    assert(size == 1024);
+    for(int i = 0; i < 1024; i++) {
+        assert(buf[i] == (char)i);
+    }
+    size = rbuf_read(rbuf, buf, 64);
+    assert(size == 64);
+    for(int i = 1024; i < 1024 + 64; i++) {
+        assert(buf[i-1024] == (char)i);
+    }
+    size = rbuf_read(rbuf, buf, 2048);
+    assert(size == 1023 - 64);
+    for(int i = 1024 + 64; i < BUF_SIZE - 1; i++) {
+        assert(buf[i - (1024+64)] == (char)i);
+    }
+
+    rbuf_delete(rbuf);
+    printf("OK\n");
+}
+
 int main()
 {
     mallinit();
@@ -72,6 +129,7 @@ int main()
 
     test1();
     test2();
+    test3();
 
     return 0;
 }

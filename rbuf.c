@@ -32,16 +32,16 @@ RBUF *rbuf_create(int size)
     return rbuf;
 }
 
-int rbuf_get_data(RBUF *rbuf)
+void rbuf_delete(RBUF *rbuf)
 {
-    if(rbuf->read_idx == rbuf->write_idx) {
-        return -1;
+    if(rbuf->buf) {
+        free(rbuf->buf);
+        rbuf->buf = NULL;
     }
-    int ret = rbuf->buf[rbuf->read_idx];
-    rbuf->read_idx = (rbuf->read_idx + 1) & rbuf->buf_mask;
-    return ret & 0xff;
+    free(rbuf);
 }
 
+#if 0
 int rbuf_peek_data(RBUF *rbuf)
 {
     if(rbuf->read_idx == rbuf->write_idx) {
@@ -55,23 +55,4 @@ int rbuf_unget(RBUF *rbuf)
 {
     rbuf->read_idx = (rbuf->read_idx - 1) & rbuf->buf_mask;
 }
-
-int rbuf_read(RBUF *rbuf, char *buf, int size)
-{
-    int read_size = 0;
-
-    for(int i = 0; i < size && rbuf_get_size(rbuf) != 0; i++) {
-        buf[i] = rbuf_get_data(rbuf);
-        read_size++;
-    }
-    return read_size;
-}
-
-void rbuf_delete(RBUF *rbuf)
-{
-    if(rbuf->buf) {
-        free(rbuf->buf);
-        rbuf->buf = NULL;
-    }
-    free(rbuf);
-}
+#endif

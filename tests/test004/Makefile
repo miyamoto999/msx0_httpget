@@ -2,7 +2,7 @@ TARGET=test004.com
 LD=z88dk-z80asm
 AS=z88dk-z80asm
 CC=zcc
-OBJS=test004.o ../../rbuf.o ../../rbuf_get_size.o ../../rbuf_add_data.o
+OBJS=test004.o ../../rbuf.o ../../rbuf_get_size.o ../../rbuf_add_data.o ../../rbuf_get_data.o ../../rbuf_read.o
 CFLAGS_INC=-I../../ -I../common
 CFLAGS=+msx -subtype=msxdos2
 ASCONFIGS=$(CFLAGS_INC)

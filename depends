@@ -1,7 +1,6 @@
 bfile_dos1.o: bfile_dos1.c msxdos.h bool.h buf_file.h
 bfile_dos2.o: bfile_dos2.c msxdos.h bool.h buf_file.h
 httpget.o: httpget.c bool.h iot.h rbuf.h msxdos.h buf_file.h net.h
-iotread.o: iotread.c bool.h iot.h rbuf.h
 msx_fcb_init.o: msx_fcb_init.c bool.h buf_file.h msxdos.h
 net.o: net.c bool.h iot.h rbuf.h net.h
 rbuf.o: rbuf.c rbuf.h bool.h

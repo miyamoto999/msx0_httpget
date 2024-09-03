@@ -11,7 +11,7 @@
 #include "net.h"
 #include "rbuf.h"
 
-#define VERSION     "1.3"
+#define VERSION     "1.4 pre"
 
 #define DATA_COUNT  3
 
@@ -113,6 +113,7 @@ int main(int argc, char *argv[])
     long download_size = 0;
     BOOL chunked = FALSE;
     RBUF *rbuf;
+    uint16_t kernel_var, dos_ver;
 
     mallinit();
     sbrk(0x8000, 16 * 1024);
@@ -127,6 +128,15 @@ int main(int argc, char *argv[])
 #else
     printf("HTTPGET Version %s\n", VERSION);
 #endif
+
+#ifdef __MSXDOS_MSXDOS2
+    dos2_dosver(&kernel_var, &dos_ver);
+    if((kernel_var >> 8) < 2) {
+        fprintf(stderr, "This command is DOS2 Version.");
+        return 1;
+    }
+#endif
+
     if(argc != 5) {
         fprintf(stderr, "Usage : httpget HOSTNAME PORT SRCPATH DESTNAME\n");
         return 1;
@@ -138,7 +148,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if(!iot_init()) {
+    if(!net_init()) {
         free(buf);
         fprintf(stderr, "Memory allocation error\n");
         return 1;
@@ -175,7 +185,7 @@ int main(int argc, char *argv[])
     net_write_str("CONNECTION: close\x0d\x0a");
     net_write_str("\x0d\x0a");
 
-    char *data = iot_readline(rbuf, NET_MSG, NET_CONNECT);
+    char *data = net_readline(rbuf, NET_MSG, NET_CONNECT);
     if(strncmp(data, "HTTP", 4) != 0) {
         fprintf(stderr, "Not Recv HTTP Status\n");
         net_discconect();
@@ -189,7 +199,7 @@ int main(int argc, char *argv[])
     }
     while(1) {
         BOOL is_connedted = net_is_connected();
-        char *data = iot_readline(rbuf, NET_MSG, NET_CONNECT);
+        char *data = net_readline(rbuf, NET_MSG, NET_CONNECT);
         int len = strlen(data);
         if(len == 0) {
             break;
@@ -233,12 +243,12 @@ int main(int argc, char *argv[])
         int read_size = BUF_SIZE;
         long chunk_size = BUF_SIZE;
         if(chunked) {
-            char *str = iot_readline(rbuf, NET_MSG, NET_CONNECT);
+            char *str = net_readline(rbuf, NET_MSG, NET_CONNECT);
             chunk_size = strtol(str, NULL, 16);
             // printf("str = %s\n", str);
             // printf("chunk_size = %ld\n", chunk_size);
             if(chunk_size == 0) {
-                iot_readline(rbuf, NET_MSG, NET_CONNECT);
+                net_readline(rbuf, NET_MSG, NET_CONNECT);
                 break;
             }
         }
@@ -288,7 +298,7 @@ int main(int argc, char *argv[])
             break;
         }
         if(chunked) {
-            iot_readline(rbuf, NET_MSG, NET_CONNECT);
+            net_readline(rbuf, NET_MSG, NET_CONNECT);
         }
     }
     disp_progreass(chunked, destname, data_size, download_size);
