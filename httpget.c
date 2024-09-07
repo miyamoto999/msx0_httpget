@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
     net_write_str("CONNECTION: close\x0d\x0a");
     net_write_str("\x0d\x0a");
 
-    char *data = net_readline(rbuf, NET_MSG, NET_CONNECT);
+    char *data = net_readline(rbuf);
     if(strncmp(data, "HTTP", 4) != 0) {
         fprintf(stderr, "Not Recv HTTP Status\n");
         net_discconect();
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
     }
     while(1) {
         BOOL is_connedted = net_is_connected();
-        char *data = net_readline(rbuf, NET_MSG, NET_CONNECT);
+        char *data = net_readline(rbuf);
         int len = strlen(data);
         if(len == 0) {
             break;
@@ -243,12 +243,12 @@ int main(int argc, char *argv[])
         int read_size = BUF_SIZE;
         long chunk_size = BUF_SIZE;
         if(chunked) {
-            char *str = net_readline(rbuf, NET_MSG, NET_CONNECT);
+            char *str = net_readline(rbuf);
             chunk_size = strtol(str, NULL, 16);
             // printf("str = %s\n", str);
             // printf("chunk_size = %ld\n", chunk_size);
             if(chunk_size == 0) {
-                net_readline(rbuf, NET_MSG, NET_CONNECT);
+                net_readline(rbuf);
                 break;
             }
         }
@@ -298,7 +298,7 @@ int main(int argc, char *argv[])
             break;
         }
         if(chunked) {
-            net_readline(rbuf, NET_MSG, NET_CONNECT);
+            net_readline(rbuf);
         }
     }
     disp_progreass(chunked, destname, data_size, download_size);

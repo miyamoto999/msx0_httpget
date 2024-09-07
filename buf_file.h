@@ -31,13 +31,13 @@ typedef BFILE_DOS2 BFILE;
 
 BOOL msx_fcb_init(struct msx_fcb *fcb, const char *filename);
 
-struct __bfile_dos1 *bfile_create_dos1(const char *filename, int16_t buf_size);
-int16_t bfile_write_dos1(struct __bfile_dos1 *fp, const void *buf, int16_t size);
-int bfile_close_dos1(struct __bfile_dos1 *fp);
+BFILE_DOS1 *bfile_create_dos1(const char *filename, int16_t buf_size);
+int16_t bfile_write_dos1(BFILE_DOS1 *fp, const void *buf, int16_t size);
+int bfile_close_dos1(BFILE_DOS1 *fp);
 
-struct __bfile_dos2 *bfile_create_dos2(const char *filename, int16_t buf_size);
-int16_t bfile_write_dos2(struct __bfile_dos2 *fp, const void *buf, int16_t size);
-int bfile_close_dos2(struct __bfile_dos2 *fp);
+BFILE_DOS2 *bfile_create_dos2(const char *filename, int16_t buf_size);
+int16_t bfile_write_dos2(BFILE_DOS2 *fp, const void *buf, int16_t size);
+int bfile_close_dos2(BFILE_DOS2 *fp);
 
 #ifdef __MSXDOS_MSXDOS1
 #define bfile_create(f, s)      bfile_create_dos1(f,s)

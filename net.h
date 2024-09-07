@@ -19,6 +19,6 @@ BOOL net_connect(const char *hostname, int port, int time_out);
 #define net_write_str(msg)          iot_puts(NET_MSG, msg)
 
 BOOL net_init();
-char *net_readline(RBUF *rbuf, const char *node, const char *node_connect);
+char *net_readline(RBUF *rbuf);
 
 #endif

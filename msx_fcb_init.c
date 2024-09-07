@@ -6,6 +6,16 @@
 #include "bool.h"
 #include "buf_file.h"
 
+/*
+    FCBにファイル名を設定する。
+
+        fcb:FCBのアドレス
+        filename:ファイル名
+
+    戻り値
+        TRUE:成功
+        FALSE:失敗
+ */
 BOOL msx_fcb_init(struct msx_fcb *fcb, const char *filename)
 {
     memset(fcb, 0, sizeof(struct msx_fcb));

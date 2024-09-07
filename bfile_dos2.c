@@ -1,16 +1,27 @@
+/* MSX-DOS2用バッファードファイル生成関係 */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "msxdos.h"
 #include "buf_file.h"
 
-struct __bfile_dos2 *bfile_create_dos2(const char *filename, int16_t buf_size)
+/*
+  ファイルを生成する。
+
+    filename:ファイル名
+    buf_size:バッファサイズ
+
+  戻り値
+    BFILE_DOS2構造体のポインタ
+    NULL:エラー
+ */
+BFILE_DOS2 *bfile_create_dos2(const char *filename, int16_t buf_size)
 {
-    struct __bfile_dos2 *fp = malloc(sizeof(struct __bfile_dos2));
+    BFILE_DOS2 *fp = malloc(sizeof(BFILE_DOS2));
     if(!fp) {
         return NULL;
     }
-    memset(fp, 0, sizeof(struct __bfile_dos2));
+    memset(fp, 0, sizeof(BFILE_DOS2));
 
     fp->buf_size = buf_size > 0 ? buf_size:DEF_BUF_SIZE;
     fp->buf = malloc(fp->buf_size);
@@ -28,7 +39,17 @@ struct __bfile_dos2 *bfile_create_dos2(const char *filename, int16_t buf_size)
     return fp;
 }
 
-int16_t bfile_write_dos2(struct __bfile_dos2 *fp, const void *buf, int16_t size)
+/*
+  ファイル書き込み
+
+    fp:BFILE_DOS2構造体のポインタ
+    buf:書き込むデータへのポインタ
+    size:データサイズ
+
+  戻り値
+      書き込んだサイズ
+*/
+int16_t bfile_write_dos2(BFILE_DOS2 *fp, const void *buf, int16_t size)
 {
     uint16_t tmp_size;
     uint8_t err;
@@ -78,7 +99,16 @@ int16_t bfile_write_dos2(struct __bfile_dos2 *fp, const void *buf, int16_t size)
     return size;
 }
 
-int bfile_close_dos2(struct __bfile_dos2 *fp)
+/*
+  ファイルのクローズ
+
+      fp:BFILE_DOS2構造体のポインタ
+
+  戻り値
+    0:成功
+    0以外:失敗
+*/
+int bfile_close_dos2(BFILE_DOS2 *fp)
 {
     uint8_t err = 0, err2;
     uint16_t tmp_size;

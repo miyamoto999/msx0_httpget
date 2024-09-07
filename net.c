@@ -7,6 +7,19 @@
 #define BUF_SIZE    256
 static char *retbuf;
 
+/*************************************************
+    メモ：ノード名から推測するに複数のネットワークや接続先も
+        想定しいるように見えるけど、そういう拡張された時に
+        対応すればいいかと思う。
+ *************************************************/
+
+/*
+    ネットワーク接続(TCP接続)を使うための初期化
+
+    戻り値
+        TRUE:成功
+        FALSE:失敗
+ */
 BOOL net_init()
 {
     retbuf = malloc(BUF_SIZE);
@@ -16,6 +29,17 @@ BOOL net_init()
     return TRUE;
 }
 
+/*
+    ネットワーク接続(TCP接続)
+    
+        hostname:ホスト名またはIPアドレス
+        port:ポート番号
+        time_out:タイムアウト(sec)
+
+    戻り値
+        TRUE:成功
+        FALSE:失敗
+ */
 BOOL net_connect(const char *hostname, int port, int time_out)
 {
     time_t st = time(NULL);
@@ -32,19 +56,36 @@ BOOL net_connect(const char *hostname, int port, int time_out)
     return TRUE;
 }
 
-static int read_char(RBUF *rbuf, const char *node)
+/*
+    接続先からデータを1バイト取得
+
+        rbuf:リングバッファ
+
+    戻り値
+        -1以外:データ
+        -1:データなし
+ */
+static int read_char(RBUF *rbuf)
 {
     char data;
     int size;
 
-    size = iot_read(rbuf, node, &data, 1);
+    size = iot_read(rbuf, NET_MSG, &data, 1);
     if(size == 0) {
         return -1;
     }
     return data & 0xff;
 }
 
-char *net_readline(RBUF *rbuf, const char *node, const char *node_connect)
+/*
+    ネットワーク(TCP接続)から1行取得
+
+        rbuf:リングバッファ
+
+    戻り値
+        1行分の受信したデータ(LFまたはCRLFまでのデータ)
+ */
+char *net_readline(RBUF *rbuf)
 {
     int size, idx;
     BOOL crflag = FALSE;
@@ -53,8 +94,12 @@ char *net_readline(RBUF *rbuf, const char *node, const char *node_connect)
 
     while(1)
     {
-        BOOL is_connected = iot_geti(node_connect);
-        int ch = read_char(rbuf, node);
+        if(BUF_SIZE - 1 == idx) {
+            retbuf[idx] = 0;
+            break;
+        }
+        BOOL is_connected = iot_geti(NET_CONNECT);
+        int ch = read_char(rbuf);
         if(ch == -1 && is_connected) {
             continue;
         } else if(ch == -1) {
