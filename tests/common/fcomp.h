@@ -1,5 +1,5 @@
-#ifndef __BCMP_H__
-#define __BCMP_H__
+#ifndef __FCOMP_H__
+#define __FCOMP_H__
 
 int fcomp(const char *filename1, const char *filename2);
 

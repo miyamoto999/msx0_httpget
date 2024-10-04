@@ -1,8 +1,10 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include "bool.h"
 #include "iot.h"
 #include "net.h"
+#include "msxdos.h"
 
 #define BUF_SIZE    256
 static char *retbuf;
@@ -37,10 +39,10 @@ BOOL net_init()
         time_out:タイムアウト(sec)
 
     戻り値
-        TRUE:成功
-        FALSE:失敗
+        NET_ERR_NONE:成功
+        その他：失敗
  */
-BOOL net_connect(const char *hostname, int port, int time_out)
+int net_connect(const char *hostname, int port, int time_out)
 {
     time_t st = time(NULL);
 
@@ -50,10 +52,21 @@ BOOL net_connect(const char *hostname, int port, int time_out)
 
     while(!net_is_connected()) {
         if(time(NULL) - st >= time_out) {
-            return FALSE;
+            return NET_ERR_TIMEOUT;
+        }
+        uint8_t key = dos1_dirio(0xff);
+        if(key == 0x03 || key == 0xd3) {      /* DOS2のdos2_defab(アボート処理ルーチンの定義)で
+                                                    CTRL-STOPで勝手に終了しないようにしている場合、
+                                                    CTRL-STOPを押すと0xd3が返ってくるが、ドキュメントに
+                                                    それっぽい記述が見つからない。けど、telnetでCtrl-Cを押すと
+                                                    Ctrl-STOPを押したことになるようなので0xd3でもNET_ERR_ABORT
+                                                    するようにした。
+                                                    なお、DOS1ではCTRL-STOPを押すと0x03が返ってくる。
+                                                    */
+            return NET_ERR_ABORT;
         }
     }
-    return TRUE;
+    return NET_ERR_NONE;
 }
 
 /*

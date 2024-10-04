@@ -11,6 +11,24 @@
 ;
 ;    https://github.com/hra1129/for_MSX0/tree/main/sample_program/002_device/2023_05_30_1st_update_version/basicn
 ;    こちらのコードを元にしています。
+;
+; void iot_node_write(const char *node)
+; {
+;     outp(IOT_PORT1, 0xe0);
+;     outp(IOT_PORT1, 1);
+;     outp(IOT_PORT1, 0x53);
+
+;     int len = strlen(node);
+;     outp(IOT_PORT1, 0xc0);
+;     outp(IOT_PORT1, len);
+
+;     for(int i = 0; i < len; i++) {
+;         outp(IOT_PORT1, node[i]);
+;     }
+;     outp(IOT_PORT1, 0);
+;     int r = inp(IOT_PORT1);
+; }
+
 iot_node_write:
     ld a,0xe0
     out (IOT_PORT1),a
@@ -19,8 +37,21 @@ iot_node_write:
     ld a,0x53
     out (IOT_PORT1),a
 
+;;;;;;;;; ここがputsのvalueを送る手順とおなじみたい？
     ld a,0xc0
     out (IOT_PORT1),a
+;;; ※ ここで、本来なら
+;   loop:
+;    総文字数が64以上なら
+;       文字数として0x7fを出力して
+;       63文字分を出力
+;       総文字数から63を引く
+;   総文字数が64未満なら
+;       文字数として総文字数を送信
+;       総文字数文出力する。
+;   文字列を出力
+;   送信する文字列が残ってるならjp loop  
+;
     ld a,b
     out (IOT_PORT1),a
 
@@ -29,8 +60,9 @@ iot_node_write:
 
     xor a
     out (IOT_PORT1),a
+;;;;;;;;;; ここまでがputsと共通
     
-    in a,(IOT_PORT1)
+    in a,(IOT_PORT1)        ; マイナス値ならエラーみたい。
 
     ret
 

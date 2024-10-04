@@ -11,8 +11,8 @@ MSX0の新ファーム(ver.0.11.08)+MSX-DOS(2)用になっています。
     - MSX-DOS Version 1.03
 
 ### ビルド環境
-- macOS Sonoma 14.6.1
-- z88dk Nightly Build(v22803-1d37583450-20240828)
+- macOS Sonoma 14.7
+- z88dk Nightly Build(v22846-cd7d5b1d99-20240926)
 
 ## ビルド方法
 Xcode、z88dkをインストールしているmacOS(UNIX風の環境ならmacOSでなくてもできると思います)で生成します。
@@ -24,7 +24,7 @@ MSX-DOS1版は make -f Makefile.dos1 で生成。(DOS1版はhttpget1.comが生�
 ## 使用方法
 
 ~~~
-Usage : httpget HOSTNAME PORT SRCPATH DESTNAME
+Usage : httpget HOSTNAME PORT SRCPATH [DESTNAME]
 ~~~
 
 - HOSTNAME
@@ -33,15 +33,16 @@ Usage : httpget HOSTNAME PORT SRCPATH DESTNAME
 
 - PORT
 
-    WEBサーバーのポート番号
+    WEBサーバーのポート番号、パスの始めの'/'は省略可能。省略した場合は追加される。
 
 - SRCPATH
 
     取得したいファイルのパス
 
-- DESTNAME
+- DESTNAME(省略可能)
 
-    保存したいファイル名
+    保存したいファイル名。
+    省略した場合、SRCPATHの最後の項目をファイル名として使用する。
 
 となり、次のように使用します。
 
@@ -55,6 +56,13 @@ httpget 192.168.0.2 80 /test.txt test.txt
 
 
 ## 更新履歴
+- 2024/10/1 Version 1.4
+    - DESTNAMEを省略可能にした。省略した場合、SRCPATHの最後の項目をファイル名として使用します。
+    - SRCPATHが'/'で始まっていないとき、'/'を追加するようにした。
+    - 経過表示のときのファイル名を8.3文字のファイル名に変更した。
+    - Webサーバーに接続されるまでの間、Ctrl-Cで停止できなかったのを改修
+    - その他、ソースコードの整理など
+
 - 2024/9/1 Version 1.3
 
     - Content-Lengthを返すサーバーからの取得中にCtrl-Cで停止できなかったのを改修

@@ -23,10 +23,11 @@ iot_puts:
     out (IOT_PORT1),a
     ld a,1
     out (IOT_PORT1),a
-    ld a,0x43
+
+    ld a,0x43           ; 値が文字列なら0x43
     out (IOT_PORT1),a
 
-    ld b,c
+    ld b,c              ; nodeパスを送信する手順(途中から)と同じみたい？
     ld a,0xc0
     out (IOT_PORT1),a
     ld a,b
@@ -40,7 +41,7 @@ iot_puts:
     xor a
     out (IOT_PORT1),a
 
-    in a,(IOT_PORT1)
+    ; in a,(IOT_PORT1)  ; これいらない？
 
     ret
 

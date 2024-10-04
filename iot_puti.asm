@@ -12,6 +12,21 @@
 ;
 ;    https://github.com/hra1129/for_MSX0/tree/main/sample_program/002_device/2023_05_30_1st_update_version/basicn
 ;    こちらのコードを元にしています。
+;
+; void iot_puti(const char *node, const int val)
+; {
+;     iot_node_write(node);
+
+;     outp(IOT_PORT1, 0xe0);
+;     outp(IOT_PORT1, 1);
+;     outp(IOT_PORT1, 0x41);
+
+;     outp(IOT_PORT1, 0xc0);
+;     outp(IOT_PORT1, 2);
+;     outp(IOT_PORT1, val);
+;     outp(IOT_PORT1, val >> 8);
+; }
+
 
 iot_puti:
     call iot_node_write
@@ -20,7 +35,8 @@ iot_puti:
     out (IOT_PORT1),a
     ld a,1
     out (IOT_PORT1),a
-    ld a,0x41
+
+    ld a,0x41               ; 整数の場合は0x41を与える
     out (IOT_PORT1),a
 
     ld a,0xc0
@@ -30,6 +46,9 @@ iot_puti:
     ld a,e
     out (IOT_PORT1),a
     ld a,d
+    out (IOT_PORT1),a
+
+    xor a
     out (IOT_PORT1),a
 
     ret

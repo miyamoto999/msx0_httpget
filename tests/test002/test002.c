@@ -58,6 +58,7 @@ int test2()
             buf[i] = rand() % 256;
         }
         int wsize = (rand() % BUF_SIZE) + 1;
+        fwrite(buf, 1, wsize, fp);
         bfile_write_dos2(fp2, buf, (int16_t)wsize);
     }
     for(int j = 0; j < 32; j++) {

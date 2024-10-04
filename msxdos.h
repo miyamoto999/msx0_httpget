@@ -72,6 +72,11 @@ uint8_t dos2_write(uint8_t handle, void *buf, uint16_t count, uint16_t *bytes);
 /* MSX-DOSのバーション番号の取得 */
 uint8_t dos2_dosver(uint16_t *kernel_ver, uint16_t *dos_ver);
 
+/* パス名の解析 */
+uint8_t dos2_parse(const char *path, uint8_t vol_flag, char **last_str, char **start_filename, uint8_t *analysis_flag, uint8_t *drv);
+/* ファイル名の解析 */
+void dos2_pfile(const char *filenmae, char *buf, char **last_str, uint8_t *analysis_flag);
+
 #define ERR_STOP        0x9f
 #define ERR_CTRLC       0x9e
 

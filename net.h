@@ -9,7 +9,11 @@
 #define NET_CONNECT "msx/me/if/NET0/connect"
 #define NET_MSG     "msx/me/if/NET0/msg"
 
-BOOL net_connect(const char *hostname, int port, int time_out);
+#define NET_ERR_NONE        0
+#define NET_ERR_TIMEOUT     1
+#define NET_ERR_ABORT       2
+
+int net_connect(const char *hostname, int port, int time_out);
 // BOOL net_is_connected();
 #define net_is_connected()      iot_geti(NET_CONNECT)
 // void net_discconect();

@@ -62,14 +62,14 @@ BOOL msx_fcb_init(struct msx_fcb *fcb, const char *filename)
         if(idx_start + i >= idx_dot) {
             break;
         }
-        fcb->name[i] = filename[idx_start + i];
+        fcb->name[i] = toupper(filename[idx_start + i]);
     }
     /* 拡張子部分をコピーする */
     for(int i = 0; i < FCB_EXT_SIZE; i++) {
         if(idx_dot + 1 + i >= len) {
             break;
         }
-        fcb->ext[i] = filename[idx_dot + 1 + i];
+        fcb->ext[i] = toupper(filename[idx_dot + 1 + i]);
     }
     return TRUE;
 }

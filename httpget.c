@@ -11,7 +11,7 @@
 #include "net.h"
 #include "rbuf.h"
 
-#define VERSION     "1.4 pre"
+#define VERSION     "1.4"
 
 #define DATA_COUNT  3
 
@@ -114,6 +114,7 @@ int main(int argc, char *argv[])
     BOOL chunked = FALSE;
     RBUF *rbuf;
     uint16_t kernel_var, dos_ver;
+    char *disp_fname = NULL;
 
     mallinit();
     sbrk(0x8000, 16 * 1024);
@@ -137,8 +138,8 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    if(argc != 5) {
-        fprintf(stderr, "Usage : httpget HOSTNAME PORT SRCPATH DESTNAME\n");
+    if(argc != 4 && argc != 5) {
+        fprintf(stderr, "Usage : httpget HOSTNAME PORT SRCPATH [DESTNAME]\n");
         return 1;
     }
     
@@ -149,30 +150,80 @@ int main(int argc, char *argv[])
     }
 
     if(!net_init()) {
-        free(buf);
         fprintf(stderr, "Memory allocation error\n");
         return 1;
     }
 
     rbuf = rbuf_create(RING_BUF_SIZE);
     if(!rbuf) {
-        free(buf);
         fprintf(stderr, "Memory allocation error\n");
         return 1;
     }
 
+    disp_fname = malloc(FCB_NAME_SIZE + FCB_EXT_SIZE + 2);
+    if(!disp_fname) {
+        fprintf(stderr, "Memory allocation error\n");
+        return 1;
+    }
+    disp_fname[FCB_NAME_SIZE + FCB_EXT_SIZE + 1] = 0;
+    
 #ifdef __MSXDOS_MSXDOS2
     dos2_defab(abort_routine);
 #endif
 
     const char *hostname = argv[1];
     const int port = atoi(argv[2]);
-    const char *src_path = argv[3];
-    const char *destname = argv[4];
+    char *src_path = argv[3];
+    char *destname = argv[4];
+
+    if(src_path[0] != '/') {
+        int len = strlen(src_path);
+        char *tmp = malloc(len + 2);
+        if(!tmp) {
+            fprintf(stderr, "Memory allocation error\n");
+            return 1;
+        }
+        tmp[0] = '/';
+        strcpy(&tmp[1], src_path);
+        src_path = tmp;
+    }
+    
+    if(argc == 4) {
+        int len = strlen(src_path);
+        int i;
+        for(i = len -1; i >= 0; i--) {
+            if(src_path[i] == '/') {
+                break;
+            }
+        }
+        destname = &src_path[i+1];
+    }
+
+#ifdef __MSXDOS_MSXDOS2
+    /* パスを解析 */
+    char *last_str, *start_filename;
+    uint8_t analysis_flag, drv;
+    if(dos2_parse(destname, 0, &last_str, &start_filename, &analysis_flag, &drv) != 0) {
+        fprintf(stderr, "Save Filename ERROR\n");
+        return 1;
+    }
+    /* ファイル名の解析 */
+    dos2_pfile(start_filename, disp_fname, &last_str, &analysis_flag);
+    char *p = &disp_fname[FCB_NAME_SIZE + FCB_EXT_SIZE - 1];
+    for(int i = 0; i < FCB_EXT_SIZE; i++) {
+        *(p + 1) = *p;
+        p--;
+    }
+    *(p + 1) = '.';
+#endif
 
     printf("CONNECT %s:%d\n", hostname, port);
-    if(!net_connect(hostname, port, TIME_OUT)) {
-        fprintf(stderr, "CONNECT TIMEOUT\n");
+    int ret = net_connect(hostname, port, TIME_OUT);
+    if(ret == NET_ERR_TIMEOUT) {
+        fprintf(stderr, "CONNECT TIMEOUT.\n");
+        return 1;
+    } else if(ret == NET_ERR_ABORT) {
+        fprintf(stderr, "Abort.\n");
         return 1;
     }
 
@@ -230,16 +281,18 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Write file create ERROR\n");
         return 1;
     }
+#ifdef __MSXDOS_MSXDOS1
+    memcpy(disp_fname, bfp->fcb.name, FCB_NAME_SIZE);
+    disp_fname[FCB_NAME_SIZE] = '.';
+    memcpy(&disp_fname[FCB_NAME_SIZE + 1], bfp->fcb.ext, FCB_EXT_SIZE);
+#endif
 
     long data_size = 0;
-    if(chunked) {
-        download_size = 1;
-    }
     uint16_t prev_jiffy = 0;
 #ifdef __MSXDOS_MSXDOS1
     *MSXWORK_CSRSW = 0;
 #endif
-    while(data_size < download_size) {
+    while(chunked || data_size < download_size) {
         int read_size = BUF_SIZE;
         long chunk_size = BUF_SIZE;
         if(chunked) {
@@ -254,13 +307,9 @@ int main(int argc, char *argv[])
         }
         int len;
         while(chunk_size > 0) {
-#ifdef __MSXDOS_MSXDOS1
             if(dos1_dirio(0xff) == 0x03) {
                 abort_flag = TRUE;
             }
-#elif defined(__MSXDOS_MSXDOS2)
-            dos1_const();
-#endif
             if(abort_flag) {
                 net_discconect();
                 break;
@@ -285,11 +334,10 @@ int main(int argc, char *argv[])
             data_size += len;
             if((GET_JIFFY() - prev_jiffy) >= 30) {
                 prev_jiffy = GET_JIFFY();
-                disp_progreass(chunked, destname, data_size, download_size);
+                disp_progreass(chunked, disp_fname, data_size, download_size);
             }
             if(chunked) {
                 chunk_size -= len;
-                download_size = data_size + 1;
             } else {
                 break;
             }
@@ -301,12 +349,12 @@ int main(int argc, char *argv[])
             net_readline(rbuf);
         }
     }
-    disp_progreass(chunked, destname, data_size, download_size);
+    disp_progreass(chunked, disp_fname, data_size, download_size);
 #ifdef __MSXDOS_MSXDOS1
     *MSXWORK_CSRSW = 1;
 #endif
     printf("\n");
-    int ret = bfile_close(bfp);
+    ret = bfile_close(bfp);
     long elapsed_time = time(NULL) - start_time;
     if(ret != 0) {
         fprintf(stderr, "File Write ERROR\n");
