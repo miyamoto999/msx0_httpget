@@ -3,12 +3,14 @@
 
     SECTION code_user
     PUBLIC iot_puti, _iot_puti
-    GLOBAL iot_node_write
+    GLOBAL iot_node_write,strlen
 
 ; nodeに数値を設定する。
 ;   hl <- nodeの文字列の先頭アドレス
 ;   b <- nodeの文字列の文字数
 ;   de <- 設定する値
+; 戻り値
+;   a <- 0:エラー、1:成功
 ;
 ;    https://github.com/hra1129/for_MSX0/tree/main/sample_program/002_device/2023_05_30_1st_update_version/basicn
 ;    こちらのコードを元にしています。
@@ -30,7 +32,14 @@
 
 iot_puti:
     call iot_node_write
+    rlca
+    jr nc,NEXT
 
+    xor a
+
+    ret
+
+NEXT:
     ld a, 0xe0
     out (IOT_PORT1),a
     ld a,1
@@ -51,11 +60,13 @@ iot_puti:
     xor a
     out (IOT_PORT1),a
 
+    inc a
+
     ret
 
 
 ; nodeに数値を設定する。(C言語)
-; void iot_puti(const char *node, const int val);
+; BOOL iot_puti(const char *node, const int val);
 _iot_puti:
 
     ; valを取り出して
@@ -75,15 +86,11 @@ _iot_puti:
 
     push hl
     ; nodeの文字数をカウント
-    ld b,0
-loop2:
-    ld a,(hl)
-    or a
-    jr z,end_countup2
-    inc b
-    inc hl
-    jr loop2
-end_countup2:
+    call strlen
     pop hl
 
-    jp iot_puti
+    call iot_puti
+
+    ld l,a
+
+    ret

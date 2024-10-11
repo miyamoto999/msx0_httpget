@@ -4,7 +4,7 @@ AS=z88dk-z80asm
 CC=zcc
 OBJS=httpget.o dos1_dirio.o bfile_dos1.o msx_fcb_init.o dos1_fmake.o dos1_wrblk.o dos1_fclose.o \
 		dos1_setdta.o iot_node_write.o net.o rbuf.o iot_puts.o iot_puti.o iot_geti.o rbuf_get_size.o rbuf_add_data.o \
-		iot_read.o rbuf_get_data.o rbuf_read.o
+		iot_read.o rbuf_get_data.o rbuf_read.o strlen.o
 CFLAGS_INC=
 CFLAGS=+msx -subtype=msxdos
 ASCONFIGS=$(CFLAGS_INC)

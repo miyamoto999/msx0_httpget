@@ -3,13 +3,15 @@
 
     SECTION code_user
     PUBLIC iot_puts, _iot_puts
-    GLOBAL iot_node_write
+    GLOBAL iot_node_write, iot_str_write,strlen
 
 ; nodeに文字列を設定する。
 ;   hl <- nodeの文字列の先頭アドレス
 ;   b <- nodeの文字列の文字数
 ;   de <- 設定する文字列の先頭アドレス
 ;   c <- 設定する文字列の文字数
+; 戻り値
+;   a <- 0:失敗、1:成功
 ;
 ;    https://github.com/hra1129/for_MSX0/tree/main/sample_program/002_device/2023_05_30_1st_update_version/basicn
 ;    こちらのコードを元にしています。
@@ -19,6 +21,15 @@ iot_puts:
     call iot_node_write
     pop bc
 
+    rlca
+    jr nc,NEXT
+
+    xor a
+
+    ret
+
+NEXT:
+
     ld a, 0xe0
     out (IOT_PORT1),a
     ld a,1
@@ -27,27 +38,17 @@ iot_puts:
     ld a,0x43           ; 値が文字列なら0x43
     out (IOT_PORT1),a
 
-    ld b,c              ; nodeパスを送信する手順(途中から)と同じみたい？
-    ld a,0xc0
-    out (IOT_PORT1),a
-    ld a,b
-    out (IOT_PORT1),a
+    ld b,c
+    ex hl,de    
+    call iot_str_write
 
-    ex hl,de
-    
-    ld c,IOT_PORT1
-    otir
-
-    xor a
-    out (IOT_PORT1),a
-
-    ; in a,(IOT_PORT1)  ; これいらない？
+    ld a,1
 
     ret
 
 
 ; nodeに文字列を設定する。(C言語)
-; void iot_puts(const char *node, const char *val);
+; BOOL iot_puts(const char *node, const char *val);
 _iot_puts:
 
     ; valのアドレスを取り出して
@@ -61,15 +62,8 @@ _iot_puts:
     ld h,d
     ld l,e
     ; valの文字数をカウント
-    ld c,0
-loop1:
-    ld a,(hl)
-    or a
-    jr z,end_countup1
-    inc c
-    inc hl
-    jr loop1
-end_countup1:
+    call strlen
+    ld c,b
 
     ; nodeのアドレスを取り出して
     ld hl,4
@@ -82,15 +76,11 @@ end_countup1:
 
     push hl
     ; nodeの文字数をカウント
-    ld b,0
-loop2:
-    ld a,(hl)
-    or a
-    jr z,end_countup2
-    inc b
-    inc hl
-    jr loop2
-end_countup2:
+    call strlen
     pop hl
 
-    jp iot_puts
+    call iot_puts
+
+    ld l,a
+
+    ret

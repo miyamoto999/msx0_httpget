@@ -32,6 +32,18 @@ BOOL net_init()
 }
 
 /*
+    ネットワーク接続設定
+
+        hostname:ホスト名またはIPアドレス
+        port:ポート番号
+ */
+void net_setup(const char *hostname, int port)
+{
+    iot_puts(NET_ADDR, hostname);
+    iot_puti(NET_PORT, port);
+}
+
+/*
     ネットワーク接続(TCP接続)
     
         hostname:ホスト名またはIPアドレス
@@ -46,8 +58,7 @@ int net_connect(const char *hostname, int port, int time_out)
 {
     time_t st = time(NULL);
 
-    iot_puts(NET_ADDR, hostname);
-    iot_puti(NET_PORT, port);
+    net_setup(hostname, port);
     iot_puti(NET_CONNECT, 1);
 
     while(!net_is_connected()) {

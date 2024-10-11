@@ -3,7 +3,7 @@
 
     SECTION code_user
     PUBLIC iot_read,_iot_read
-    GLOBAL iot_node_write,rbuf_add_data,rbuf_read, rbuf_get_size
+    GLOBAL iot_node_write,rbuf_add_data,rbuf_read, rbuf_get_size,strlen
 
 ; nodeからデータを取得
 ;   hl <- nodeの文字列の先頭アドレス
@@ -13,7 +13,8 @@
 ;   ix <- RBUF、リングバッファ
 ;
 ; 戻り値
-;   hl <- 書き込んだデータ数
+;   hl <- 読み込んだデータ数
+;           -1:エラー
 ;
 ;
 ; int iot_read_1(RBUF *rbuf, const char *node, char *buf, int size)
@@ -43,6 +44,15 @@ iot_read_1:
     push bc
     call iot_node_write
     pop bc
+
+    rlca
+    jr nc,NEXT
+
+    ld hl,-1
+
+    ret
+
+NEXT:
 
     ld a,0xe0
     out (IOT_PORT1),a
@@ -98,7 +108,8 @@ loop2:
 ;   ix <- RBUF、リングバッファ
 ;
 ; 戻り値
-;   hl <- 書き込んだデータ数
+;   hl <- 読み込んだデータ数
+;           -1:エラー
 ;
 ; int iot_read(RBUF *rbuf, const char *node, char *buf, int size)
 ; {
@@ -134,7 +145,7 @@ _iot_read:
     ld hl,2
     add hl,sp
 
-    ; bufを取り出す
+    ; sizeを取り出す
     ld c,(hl)
     inc hl
     ld b,(hl)
@@ -142,7 +153,7 @@ _iot_read:
     push bc
     pop iy
 
-    ; sizeを取り出す
+    ; bufを取り出す
     ld e,(hl)
     inc hl
     ld d,(hl)
@@ -168,15 +179,17 @@ _iot_read:
     ld l,a
 
     push hl
-    ld b,0
-loop4:
-    ld a,(hl)
-    inc b
-    inc hl
-    or a
-    jr nz,loop4
+;     ld b,0
+; loop4:
+;     ld a,(hl)
+;     inc b
+;     inc hl
+;     or a
+;     jr nz,loop4
+    call strlen
+    
     pop hl
-    dec b
+    ; dec b
 
     jp iot_read
 

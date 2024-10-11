@@ -4,7 +4,7 @@ AS=z88dk-z80asm
 CC=zcc
 OBJS=httpget.o dos1_const.o dos2_defab.o bfile_dos2.o dos2_create.o dos2_write.o dos2_close.o \
 	iot_node_write.o net.o rbuf.o iot_puts.o iot_puti.o iot_geti.o rbuf_get_size.o rbuf_add_data.o iot_read.o \
-	dos2_dosver.o rbuf_get_data.o rbuf_read.o dos1_dirio.o dos2_parse.o  dos2_pfile.o
+	dos2_dosver.o rbuf_get_data.o rbuf_read.o dos1_dirio.o dos2_parse.o  dos2_pfile.o strlen.o
 CFLAGS_INC=
 CFLAGS=+msx -subtype=msxdos2
 ASCONFIGS=$(CFLAGS_INC)

@@ -3,7 +3,7 @@
 
     SECTION code_user
     PUBLIC iot_geti, _iot_geti
-    GLOBAL iot_node_write
+    GLOBAL iot_node_write,strlen
 
 ; nodeから数値を取得する
 ;   hl <- nodeの文字列の先頭アドレス
@@ -39,6 +39,13 @@
 
 iot_geti:
     call iot_node_write
+    rlca
+    jr nc,NEXT
+
+    ld hl,0
+    ret
+
+NEXT:
 
     ld a, 0xe0
     out (IOT_PORT1),a
@@ -76,15 +83,8 @@ _iot_geti:
     ld h,d
     ld l,e
     ; nodeの文字数をカウント
-    ld b,0
-loop2:
-    ld a,(hl)
-    or a
-    jr z,end_countup2
-    inc b
-    inc hl
-    jr loop2
-end_countup2:
+    call strlen
+
     ex hl,de
 
     jp iot_geti

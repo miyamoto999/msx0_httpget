@@ -12,7 +12,7 @@ MSX0の新ファーム(ver.0.11.08)+MSX-DOS(2)用になっています。
 
 ### ビルド環境
 - macOS Sonoma 14.7
-- z88dk Nightly Build(v22846-cd7d5b1d99-20240926)
+- z88dk Nightly Build(v22885-15dcc5eb31-20241004)
 
 ## ビルド方法
 Xcode、z88dkをインストールしているmacOS(UNIX風の環境ならmacOSでなくてもできると思います)で生成します。
@@ -56,6 +56,9 @@ httpget 192.168.0.2 80 /test.txt test.txt
 
 
 ## 更新履歴
+- 2024/10/11
+    - iot_〜()で64文字以上のノードパスや文字列を指定できるように改修(httpgetではこの対応は必要なかったが)
+
 - 2024/10/1 Version 1.4
     - DESTNAMEを省略可能にした。省略した場合、SRCPATHの最後の項目をファイル名として使用します。
     - SRCPATHが'/'で始まっていないとき、'/'を追加するようにした。
