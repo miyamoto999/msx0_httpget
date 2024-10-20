@@ -38,28 +38,33 @@ BOOL abort_flag = FALSE;
 BOOL write_err_flag = FALSE;
 BOOL net_err_flag = FALSE;
 
-
-void pre_printf(FILE *fp, char *fmt, ...)
+int pre_printf(const char *fmt, ...)
 {
     va_list ag;
-    static char buf[256];
+    static char buf[BUF_SIZE];
 
     int a = getarg();
-    ag = (a - 1) * 2 - 4 + &fmt;
-    char *format = *((int*)((a - 1) * 2 - 2 + &fmt));
+    ag = ((a - 1) << 1) - 2 + &fmt;
+    char *format = *((int*)(((a - 1) << 1) + &fmt));
     int size = vsnprintf(buf, 256, format, ag);
     va_end(ag);
 
-    for(int i = 0; i < size; i++) {
+    if(size < 0) {
+        return size;
+    }
+
+    for(int i = 0; buf[i]; i++) {
         dos1_dirio(buf[i]);
         if(buf[i] == 0x0a) {
             dos1_dirio(0x0d);
         }
     }
+
+    return size;
 }
 
-#define fprintf(file, ...)          pre_printf(file, __VA_ARGS__)
-#define printf(...)                 pre_printf(stdout, __VA_ARGS__)
+#define fprintf(file, ...)          pre_printf(__VA_ARGS__)
+#define printf(...)                 pre_printf(__VA_ARGS__)
 
 static void spliit_http_status(char *status, char *datas[])
 {
