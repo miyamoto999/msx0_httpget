@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <stdint.h>
 #include <time.h>
 #include <string.h>
@@ -11,7 +12,7 @@
 #include "net.h"
 #include "rbuf.h"
 
-#define VERSION     "1.5 pre"
+#define VERSION     "1.4.1"
 
 #define DATA_COUNT  3
 
@@ -36,6 +37,29 @@ static char *buf;
 BOOL abort_flag = FALSE;
 BOOL write_err_flag = FALSE;
 BOOL net_err_flag = FALSE;
+
+
+void pre_printf(FILE *fp, char *fmt, ...)
+{
+    va_list ag;
+    static char buf[256];
+
+    int a = getarg();
+    ag = (a - 1) * 2 - 4 + &fmt;
+    char *format = *((int*)((a - 1) * 2 - 2 + &fmt));
+    int size = vsnprintf(buf, 256, format, ag);
+    va_end(ag);
+
+    for(int i = 0; i < size; i++) {
+        dos1_dirio(buf[i]);
+        if(buf[i] == 0x0a) {
+            dos1_dirio(0x0d);
+        }
+    }
+}
+
+#define fprintf(file, ...)          pre_printf(file, __VA_ARGS__)
+#define printf(...)                 pre_printf(stdout, __VA_ARGS__)
 
 static void spliit_http_status(char *status, char *datas[])
 {
@@ -92,7 +116,13 @@ void disp_progreass(BOOL chunked, const char *filename, long data_size, long tot
     if(chunked) {
         fprintf(stderr, "%s (%ld)\x0d", filename, data_size);
     } else {
-        fprintf(stderr, "%s (%ld/%ld)\x0d", filename, data_size, total_size);
+        if(data_size > 1024 && total_size > 1024) {
+            fprintf(stderr, "%s (%ldK/%ldK)\x0d", filename, data_size / 1024, total_size / 1024);
+        } else if(total_size > 1024) {
+            fprintf(stderr, "%s (%ld/%ldK)\x0d", filename, data_size, total_size / 1024);
+        } else {
+            fprintf(stderr, "%s (%ld/%ld)\x0d", filename, data_size, total_size);
+        }
     }
 }
 
@@ -289,9 +319,7 @@ int main(int argc, char *argv[])
 
     long data_size = 0;
     uint16_t prev_jiffy = 0;
-#ifdef __MSXDOS_MSXDOS1
     *MSXWORK_CSRSW = 0;
-#endif
     while(chunked || data_size < download_size) {
         int read_size = BUF_SIZE;
         long chunk_size = BUF_SIZE;
@@ -350,10 +378,8 @@ int main(int argc, char *argv[])
         }
     }
     disp_progreass(chunked, disp_fname, data_size, download_size);
-#ifdef __MSXDOS_MSXDOS1
     *MSXWORK_CSRSW = 1;
-#endif
-    printf("\n");
+    printf(" \n");
     ret = bfile_close(bfp);
     long elapsed_time = time(NULL) - start_time;
     if(ret != 0) {

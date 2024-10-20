@@ -12,7 +12,7 @@ MSX0の新ファーム(ver.0.11.08)+MSX-DOS(2)用になっています。
 
 ### ビルド環境
 - macOS Sonoma 14.7
-- z88dk Nightly Build(v22885-15dcc5eb31-20241004)
+- z88dk Nightly Build(v22962-1afd970524-20241019)
 
 ## ビルド方法
 Xcode、z88dkをインストールしているmacOS(UNIX風の環境ならmacOSでなくてもできると思います)で生成します。
@@ -56,6 +56,9 @@ httpget 192.168.0.2 80 /test.txt test.txt
 
 
 ## 更新履歴
+- 2024/10/20 Version 1.4.1
+    - BASICでCALL KANJI後、DOSに戻って実行するとフリーズする問題を改修(あくまで暫定)
+
 - 2024/10/11
     - iot_〜()で64文字以上のノードパスや文字列を指定できるように改修(httpgetではこの対応は必要なかったが)
 
