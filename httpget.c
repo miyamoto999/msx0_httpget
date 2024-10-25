@@ -12,7 +12,7 @@
 #include "net.h"
 #include "rbuf.h"
 
-#define VERSION     "1.4.1"
+#define VERSION     "1.4.2"
 
 #define DATA_COUNT  3
 
@@ -38,6 +38,7 @@ BOOL abort_flag = FALSE;
 BOOL write_err_flag = FALSE;
 BOOL net_err_flag = FALSE;
 
+/*
 int pre_printf(const char *fmt, ...)
 {
     va_list ag;
@@ -65,6 +66,7 @@ int pre_printf(const char *fmt, ...)
 
 #define fprintf(file, ...)          pre_printf(__VA_ARGS__)
 #define printf(...)                 pre_printf(__VA_ARGS__)
+*/
 
 static void spliit_http_status(char *status, char *datas[])
 {
