@@ -11,17 +11,39 @@ MSX0の新ファーム(ver.0.11.08)+MSX-DOS(2)用になっています。
     - MSX-DOS Version 1.03
 
 ### ビルド環境
-- macOS Sonoma 14.7
-- z88dk Nightly Build(v22994-d2f5ebabe2-20241025)
+- macOS Sonoma 14.7.1
+- z88dk Nightly Build(v22996-72e39bdbca-20241101)
 
     ビルドするにはv22994-d2f5ebabe2-20241025以降が必要。以前のバージョンでビルドすると漢字モードで実行するとフリーズする。
 
 ## ビルド方法
 Xcode、z88dkをインストールしているmacOS(UNIX風の環境ならmacOSでなくてもできると思います)で生成します。
 
-MSX-DOS2版は make で生成。
+ソースを取得するにはサブモジュールを使用しているので
 
-MSX-DOS1版は make -f Makefile.dos1 で生成。(DOS1版はhttpget1.comが生成されます。)
+~~~
+git clone --recursive https://github.com/miyamoto999/msx0_httpget.git
+~~~
+
+で取得してください。
+
+cloneしたディレクトリに入って
+
+MSX-DOS2版は
+
+~~~
+./build.sh
+~~~
+
+を実行します。
+
+MSX-DOS1版は
+
+~~~
+./build1.sh
+~~~
+
+を実行します。(DOS1版はhttpget1.comが生成されます。)
 
 ## 使用方法
 
@@ -58,6 +80,9 @@ httpget 192.168.0.2 80 /test.txt test.txt
 
 
 ## 更新履歴
+- 2024/11/2 Version 1.4.3
+    - 汎用的なルーチンをライブラリ化([msxlib](https://github.com/miyamoto999/msxlib))し、それをsubmoduleとして参照するようにした。(バイナリのリリースはやめておく)
+
 - 2024/10/25 Version 1.4.2
     - z88dkのバージョンv22994-d2f5ebabe2-20241025でコンソールへの改行出力でフリーズする問題が改修されたので2024/10/20の暫定対応部分を元に戻す。(バイナリのリリースはやめておく)
 

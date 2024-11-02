@@ -1,6 +1,5 @@
-bfile_dos1.o: bfile_dos1.c msxdos.h bool.h buf_file.h
-bfile_dos2.o: bfile_dos2.c msxdos.h bool.h buf_file.h
-httpget.o: httpget.c bool.h iot.h rbuf.h msxdos.h buf_file.h net.h
-msx_fcb_init.o: msx_fcb_init.c bool.h buf_file.h msxdos.h
-net.o: net.c bool.h iot.h rbuf.h net.h
-rbuf.o: rbuf.c rbuf.h bool.h
+httpget.o: httpget.c msxlib/include/msxlib/msxlib.h \
+  msxlib/include/msxlib/iot.h msxlib/include/msxlib/msxbios.h \
+  msxlib/include/msxlib/msxbiosaddr.h msxlib/include/msxlib/rbuf.h \
+  msxlib/include/msxlib/iotaddr.h msxlib/include/msxlib/msxdos.h \
+  msxlib/include/msxlib/bfile.h msxlib/include/msxlib/net.h

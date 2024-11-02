@@ -309,5 +309,3 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,macos,linux,visualstudiocode,node,c,c++
 
-build.sh
-build1.sh

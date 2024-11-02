@@ -1,0 +1,3 @@
+[submodule "msxlib"]
+	path = msxlib
+	url = https://github.com/miyamoto999/msxlib.git

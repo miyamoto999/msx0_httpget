@@ -5,14 +5,14 @@
 #include <time.h>
 #include <string.h>
 #include <errno.h>
-#include "bool.h"
-#include "iot.h"
-#include "msxdos.h"
-#include "buf_file.h"
-#include "net.h"
-#include "rbuf.h"
+#include <msxlib/msxlib.h>
+#include <msxlib/iot.h>
+#include <msxlib/msxdos.h>
+#include <msxlib/bfile.h>
+#include <msxlib/net.h>
+#include <msxlib/rbuf.h>
 
-#define VERSION     "1.4.2"
+#define VERSION     "1.4.3"
 
 #define DATA_COUNT  3
 
@@ -39,31 +39,6 @@ BOOL write_err_flag = FALSE;
 BOOL net_err_flag = FALSE;
 
 /*
-int pre_printf(const char *fmt, ...)
-{
-    va_list ag;
-    static char buf[BUF_SIZE];
-
-    int a = getarg();
-    ag = ((a - 1) << 1) - 2 + &fmt;
-    char *format = *((int*)(((a - 1) << 1) + &fmt));
-    int size = vsnprintf(buf, 256, format, ag);
-    va_end(ag);
-
-    if(size < 0) {
-        return size;
-    }
-
-    for(int i = 0; buf[i]; i++) {
-        dos1_dirio(buf[i]);
-        if(buf[i] == 0x0a) {
-            dos1_dirio(0x0d);
-        }
-    }
-
-    return size;
-}
-
 #define fprintf(file, ...)          pre_printf(__VA_ARGS__)
 #define printf(...)                 pre_printf(__VA_ARGS__)
 */
@@ -133,7 +108,7 @@ void disp_progreass(BOOL chunked, const char *filename, long data_size, long tot
     }
 }
 
-#ifdef __MSXDOS_MSXDOS2
+#if __MSXDOS__ == 2
 BOOL abort_routine(uint8_t err1, uint8_t err2)
 {
     if(err1 == ERR_CTRLC || err1 == ERR_STOP) {
@@ -156,18 +131,18 @@ int main(int argc, char *argv[])
     mallinit();
     sbrk(0x8000, 16 * 1024);
 
-#ifdef __MSXDOS_MSXDOS1
+#if __MSXDOS__ == 1
     int cmd_len = *((uint8_t *)0x0080);
     *((uint8_t *)0x0081 + cmd_len) = 0;
 #endif
 
-#ifdef __MSXDOS_MSXDOS1
+#if __MSXDOS__ == 1
     printf("HTTPGET1 Version %s(DOS1 Version)\n", VERSION);
 #else
     printf("HTTPGET Version %s\n", VERSION);
 #endif
 
-#ifdef __MSXDOS_MSXDOS2
+#if __MSXDOS__ == 2
     dos2_dosver(&kernel_var, &dos_ver);
     if((kernel_var >> 8) < 2) {
         fprintf(stderr, "This command is DOS2 Version.");
@@ -204,7 +179,7 @@ int main(int argc, char *argv[])
     }
     disp_fname[FCB_NAME_SIZE + FCB_EXT_SIZE + 1] = 0;
     
-#ifdef __MSXDOS_MSXDOS2
+#if __MSXDOS__ == 2
     dos2_defab(abort_routine);
 #endif
 
@@ -236,7 +211,7 @@ int main(int argc, char *argv[])
         destname = &src_path[i+1];
     }
 
-#ifdef __MSXDOS_MSXDOS2
+#if __MSXDOS__ == 2
     /* パスを解析 */
     char *last_str, *start_filename;
     uint8_t analysis_flag, drv;
@@ -318,10 +293,10 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Write file create ERROR\n");
         return 1;
     }
-#ifdef __MSXDOS_MSXDOS1
-    memcpy(disp_fname, bfp->fcb.name, FCB_NAME_SIZE);
+#if __MSXDOS__ == 1
+    memcpy(disp_fname, bfp->fcb.v1.name, FCB_NAME_SIZE);
     disp_fname[FCB_NAME_SIZE] = '.';
-    memcpy(&disp_fname[FCB_NAME_SIZE + 1], bfp->fcb.ext, FCB_EXT_SIZE);
+    memcpy(&disp_fname[FCB_NAME_SIZE + 1], bfp->fcb.v1.ext, FCB_EXT_SIZE);
 #endif
 
     long data_size = 0;
